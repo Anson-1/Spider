@@ -1,5 +1,7 @@
 #include <Ramp.h>
 #include <Math.h>
+#include "ROSserial.hpp"
+
 
 #ifdef ESP32
 #include <ESP32Servo.h>
