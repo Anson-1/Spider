@@ -2,7 +2,6 @@
 #include <Math.h>
 #include "ROSserial.hpp"
 
-
 #ifdef ESP32
 #include <ESP32Servo.h>
 #define Back_L1 12
@@ -59,9 +58,24 @@ unsigned long previousMillis = 0;
 float Ground = 13;
 
 const double J3_LegAngle = 10;
+const double lines[][3] = {
+    {10, 10, 14},
+    {9, 10, 14},
+    {8, 10, 14},
+    {7, 10, 14},
+    {6, 10, 14},
+    {5, 10, 14},
+    {4, 10, 14},
+    {3, 10, 14},
+    {2, 10, 14},
+    {1, 10, 14},
+    {0, 10, 14},
+    {-1, 10, 14},
+    {-2, 10, 14},
+    {-3, 10, 14},
+    {-4, 10, 8},
+};
 
-
- 
 class Joint
 {
 private:
@@ -99,6 +113,7 @@ public:
       if (targetAngle < angle)
       {
         angle--;
+        Serial.println(targetAngle);
         if (angle < 0)
         {
           angle = 0;
@@ -142,61 +157,62 @@ public:
 
   bool CartesianMove(double X, double Y, double Z, Joint *Joint1, Joint *Joint2, Joint *Joint3)
   {
-    if (doIK)
+
+    if (X > 0)
     {
-      if (X > 0)
-      {
-        J1 = atan(Y / X) * (180 / PI);
-        D = sqrt((Y * Y) + (X * X));
-        d = D - J1L;
-        Z_offset = Ground - Z;
-        R = sqrt((d * d) + (Z_offset * Z_offset));
-        Alpha_1 = acos(Z_offset / R) * (180 / PI);
-        Alpha_2 = acos(((J2L * J2L) + (R * R) - (J3L * J3L)) / (2 * J2L * R)) * (180 / PI);
-        J2 = (Alpha_1 + Alpha_2);
-        J3 = acos(((J2L * J2L) + (J3L * J3L) - (R * R)) / (2 * J2L * J3L)) * (180 / PI);
-      }
-      else if (X == 0)
-      {
-        J1 = 90;
-        D = sqrt((Y * Y) + (X * X));
-        d = D - J1L;
-        Z_offset = Ground - Z;
-        R = sqrt((d * d) + (Z_offset * Z_offset));
-        Alpha_1 = acos(Z_offset / R) * (180 / PI);
-        Alpha_2 = acos(((J2L * J2L) + (R * R) - (J3L * J3L)) / (2 * J2L * R)) * (180 / PI);
-        J2 = (Alpha_1 + Alpha_2);
-        J3 = acos(((J2L * J2L) + (J3L * J3L) - (R * R)) / (2 * J2L * J3L)) * (180 / PI);
-      }
-      else if (X < 0)
-      {
-        J1 = 90 + (90 - abs((atan(Y / X)) * (180 / PI)));
-        D = sqrt((Y * Y) + (X * X));
-        d = D - J1L;
-        Z_offset = Ground - Z;
-        R = sqrt((d * d) + (Z_offset * Z_offset));
-        Alpha_1 = acos(Z_offset / R) * (180 / PI);
-        Alpha_2 = acos(((J2L * J2L) + (R * R) - (J3L * J3L)) / (2 * J2L * R)) * (180 / PI);
-        J2 = (Alpha_1 + Alpha_2);
-        J3 = acos(((J2L * J2L) + (J3L * J3L) - (R * R)) / (2 * J2L * J3L)) * (180 / PI);
-      }
-      doIK = false;
+      J1 = atan(Y / X) * (180 / PI);
+      D = sqrt((Y * Y) + (X * X));
+      d = D - J1L;
+      Z_offset = Ground - Z;
+      R = sqrt((d * d) + (Z_offset * Z_offset));
+      Alpha_1 = acos(Z_offset / R) * (180 / PI);
+      Alpha_2 = acos(((J2L * J2L) + (R * R) - (J3L * J3L)) / (2 * J2L * R)) * (180 / PI);
+      J2 = (Alpha_1 + Alpha_2);
+      J3 = acos(((J2L * J2L) + (J3L * J3L) - (R * R)) / (2 * J2L * J3L)) * (180 / PI);
     }
-    bool l = true;
-    if(!doIK){
-      l &= Joint1->Update(J1);
-      l &= Joint2->Update(J2);
-      l &= Joint3->Update(J3);
-      if(l){
-        doIK = true;
-      }
+    else if (X == 0)
+    {
+      J1 = 90;
+      D = sqrt((Y * Y) + (X * X));
+      d = D - J1L;
+      Z_offset = Ground - Z;
+      R = sqrt((d * d) + (Z_offset * Z_offset));
+      Alpha_1 = acos(Z_offset / R) * (180 / PI);
+      Alpha_2 = acos(((J2L * J2L) + (R * R) - (J3L * J3L)) / (2 * J2L * R)) * (180 / PI);
+      J2 = (Alpha_1 + Alpha_2);
+      J3 = acos(((J2L * J2L) + (J3L * J3L) - (R * R)) / (2 * J2L * J3L)) * (180 / PI);
     }
-    return l;
+    else if (X < 0)
+    {
+      J1 = 90 + (90 - abs((atan(Y / X)) * (180 / PI)));
+      D = sqrt((Y * Y) + (X * X));
+      d = D - J1L;
+      Z_offset = Ground - Z;
+      R = sqrt((d * d) + (Z_offset * Z_offset));
+      Alpha_1 = acos(Z_offset / R) * (180 / PI);
+      Alpha_2 = acos(((J2L * J2L) + (R * R) - (J3L * J3L)) / (2 * J2L * R)) * (180 / PI);
+      J2 = (Alpha_1 + Alpha_2);
+      J3 = acos(((J2L * J2L) + (J3L * J3L) - (R * R)) / (2 * J2L * J3L)) * (180 / PI);
+    }
+    l1 = Joint1->Update(J1);
+    l2 = Joint2->Update(J2);
+    l3 = Joint3->Update(J3);
+    Serial.println(l1);
+    if (l1 & l2 & l3 == true)
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   }
 
 private:
   double _LegAngle;
   bool doIK;
+  bool l1, l2, l3;
+
   double J1;
   double J2;
   double J3;
@@ -228,9 +244,6 @@ double AYAct = 0.0;
 double AZAct = 0.0;
 
 uint8_t commandStep = 0;
-
-
-
 
 void Move(int leg, double X, double Y, double Z)
 {
@@ -362,30 +375,25 @@ void stand()
 void setup()
 {
   Serial.begin(19200);
-  L1J1.Setup(Front_L1, false);
-  L1J2.Setup(Front_L2, false);
-  L1J3.Setup(Front_L3, true);
-  L2J1.Setup(Front_R1, true);
-  L2J2.Setup(Front_R2, true);
-  L2J3.Setup(Front_R3, false);
-  L3J1.Setup(Back_L1, true);
-  L3J2.Setup(Back_L2, true);
-  L3J3.Setup(Back_L3, false);
-  L4J1.Setup(Back_R1, false);
-  L4J2.Setup(Back_R2, false);
-  L4J3.Setup(Back_R3, true);
+  Front_Left1.attach(Front_L1);
+  Front_Left2.attach(Front_L2);
+  Front_Left3.attach(Front_L3);
+
+  Front_Right1.attach(Front_R1);
+  Front_Right2.attach(Front_R2);
+  Front_Right3.attach(Front_R3);
+
+  Back_Left1.attach(Back_L1);
+  Back_Left2.attach(Back_L2);
+  Back_Left3.attach(Back_L3);
+
+  Back_Right1.attach(Back_R1);
+  Back_Right2.attach(Back_R2);
+  Back_Right3.attach(Back_R3);
 
   // Stand
-  bool l = false;
-  while (!l)
-  {
-    l = true;
-    l &= L1.CartesianMove(10, 10, 8, &L1J1, &L1J2, &L1J3);
-    l &= L2.CartesianMove(10, 10, 8, &L2J1, &L2J2, &L2J3);
-    l &= L3.CartesianMove(10, 10, 8, &L3J1, &L3J2, &L3J3);
-    l &= L4.CartesianMove(10, 10, 8, &L4J1, &L4J2, &L4J3);
-  }
-  
+  stand();
+
   delay(2000);
 }
 
@@ -601,18 +609,12 @@ void TurnRight()
 
 void loop()
 {
-  // for(int i=0; i<2; i++){
-  //   Forward();
-  // }
-  // for(int i=0; i<5; i++){
-  //   TurnLeft();
-  // }
-  // for(int i=0; i<2; i++){
-  //   Backward();
-  // }
-  // for(int i=0; i<5; i++){
-  //   TurnRight();
-  // }
-//   Front_Left2.write(180);
-//   Front_Right2.write(0);
+  bool completed1 = true;
+  completed1 = L2.CartesianMove(10, 10, 13, &L2J1, &L2J2, &L2J3);
+  if (completed1 == true)
+  {
+    Serial.println("hello");
+    L2.CartesianMove(-4, sqrt(184), 13, &L2J1, &L2J2, &L2J3);
+    // L4.CartesianMove(-4, sqrt(184), 13, &L4J1, &L4J2, &L4J3);
+  }
 }
