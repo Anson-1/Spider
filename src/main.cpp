@@ -58,192 +58,12 @@ unsigned long previousMillis = 0;
 float Ground = 13;
 
 const double J3_LegAngle = 10;
-const double lines[][3] = {
-    {10, 10, 14},
-    {9, 10, 14},
-    {8, 10, 14},
-    {7, 10, 14},
-    {6, 10, 14},
-    {5, 10, 14},
-    {4, 10, 14},
-    {3, 10, 14},
-    {2, 10, 14},
-    {1, 10, 14},
-    {0, 10, 14},
-    {-1, 10, 14},
-    {-2, 10, 14},
-    {-3, 10, 14},
-    {-4, 10, 8},
-};
+unsigned long __angleTimeGap = 10;
+unsigned long prevTime = millis();
 
-class Joint
-{
-private:
-  int angle;
-  unsigned long prevTime;
-  Servo _Servo;
-  uint8_t _Pin;
-
-public:
-  bool Inverted;
-
-  Joint()
-  {
-    Inverted = false;
-  }
-
-  void Setup(uint8_t Pin, bool I)
-  {
-    _Pin = Pin;
-    Inverted = I;
-    _Servo.attach(_Pin);
-    _Servo.write(angle = 90);
-    prevTime = millis();
-  }
-
-  bool Update(int targetAngle, unsigned long __angleTimeGap = 10)
-  {
-    if (angle == targetAngle)
-    {
-      return true;
-    }
-    if (millis() - prevTime >= __angleTimeGap)
-    {
-      prevTime = millis();
-      if (targetAngle < angle)
-      {
-        angle--;
-        Serial.println(targetAngle);
-        if (angle < 0)
-        {
-          angle = 0;
-        }
-      }
-      else
-      {
-        angle++;
-        if (angle > 180)
-        {
-          angle = 180;
-        }
-      }
-      if (Inverted)
-      {
-        _Servo.write(180 - angle);
-      }
-      else
-      {
-        _Servo.write(angle);
-      }
-    }
-    return false;
-  }
-};
-
-class Leg
-{
-public:
-  Leg()
-  {
-    doIK = true;
-    _LegAngle = 0;
-  }
-
-  void Setup(double Angle = 0)
-  {
-    _LegAngle = Angle;
-    doIK = true;
-  }
-
-  bool CartesianMove(double X, double Y, double Z, Joint *Joint1, Joint *Joint2, Joint *Joint3)
-  {
-
-    if (X > 0)
-    {
-      J1 = atan(Y / X) * (180 / PI);
-      D = sqrt((Y * Y) + (X * X));
-      d = D - J1L;
-      Z_offset = Ground - Z;
-      R = sqrt((d * d) + (Z_offset * Z_offset));
-      Alpha_1 = acos(Z_offset / R) * (180 / PI);
-      Alpha_2 = acos(((J2L * J2L) + (R * R) - (J3L * J3L)) / (2 * J2L * R)) * (180 / PI);
-      J2 = (Alpha_1 + Alpha_2);
-      J3 = acos(((J2L * J2L) + (J3L * J3L) - (R * R)) / (2 * J2L * J3L)) * (180 / PI);
-    }
-    else if (X == 0)
-    {
-      J1 = 90;
-      D = sqrt((Y * Y) + (X * X));
-      d = D - J1L;
-      Z_offset = Ground - Z;
-      R = sqrt((d * d) + (Z_offset * Z_offset));
-      Alpha_1 = acos(Z_offset / R) * (180 / PI);
-      Alpha_2 = acos(((J2L * J2L) + (R * R) - (J3L * J3L)) / (2 * J2L * R)) * (180 / PI);
-      J2 = (Alpha_1 + Alpha_2);
-      J3 = acos(((J2L * J2L) + (J3L * J3L) - (R * R)) / (2 * J2L * J3L)) * (180 / PI);
-    }
-    else if (X < 0)
-    {
-      J1 = 90 + (90 - abs((atan(Y / X)) * (180 / PI)));
-      D = sqrt((Y * Y) + (X * X));
-      d = D - J1L;
-      Z_offset = Ground - Z;
-      R = sqrt((d * d) + (Z_offset * Z_offset));
-      Alpha_1 = acos(Z_offset / R) * (180 / PI);
-      Alpha_2 = acos(((J2L * J2L) + (R * R) - (J3L * J3L)) / (2 * J2L * R)) * (180 / PI);
-      J2 = (Alpha_1 + Alpha_2);
-      J3 = acos(((J2L * J2L) + (J3L * J3L) - (R * R)) / (2 * J2L * J3L)) * (180 / PI);
-    }
-    l1 = Joint1->Update(J1);
-    l2 = Joint2->Update(J2);
-    l3 = Joint3->Update(J3);
-    Serial.println(l1);
-    if (l1 & l2 & l3 == true)
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  }
-
-private:
-  double _LegAngle;
-  bool doIK;
-  bool l1, l2, l3;
-
-  double J1;
-  double J2;
-  double J3;
-};
-
-Leg L1;
-Leg L2;
-Leg L3;
-Leg L4;
-
-Joint L1J1;
-Joint L1J2;
-Joint L1J3;
-
-Joint L2J1;
-Joint L2J2;
-Joint L2J3;
-
-Joint L3J1;
-Joint L3J2;
-Joint L3J3;
-
-Joint L4J1;
-Joint L4J2;
-Joint L4J3;
-
-double AXAct = 0.0;
-double AYAct = 0.0;
-double AZAct = 0.0;
-
-uint8_t commandStep = 0;
+double angle1 = 90;
+double angle2 = 90;
+double angle3 = 90;
 
 void Move(int leg, double X, double Y, double Z)
 {
@@ -306,15 +126,15 @@ void Move(int leg, double X, double Y, double Z)
   case 1:
     if (!isnanf(J1))
     {
-      Front_Left1.write(J1);
+      Front_Left1.write(angle1);
     }
     if (!isnanf(J2))
     {
-      Front_Left2.write(J2);
+      Front_Left2.write(angle2);
     }
     if (!isnanf(J3))
     {
-      Front_Left3.write(180 - J3);
+      Front_Left3.write(angle3);
     }
     break;
   case 2:
@@ -609,12 +429,30 @@ void TurnRight()
 
 void loop()
 {
-  bool completed1 = true;
-  completed1 = L2.CartesianMove(10, 10, 13, &L2J1, &L2J2, &L2J3);
-  if (completed1 == true)
+  if (angle1 == 45)
+  {
+    Front_Left1.write(angle1);
+  }
+  if (millis() - prevTime >= __angleTimeGap)
   {
     Serial.println("hello");
-    L2.CartesianMove(-4, sqrt(184), 13, &L2J1, &L2J2, &L2J3);
-    // L4.CartesianMove(-4, sqrt(184), 13, &L4J1, &L4J2, &L4J3);
+    prevTime = millis();
+    if (45 < angle1)
+    {
+      angle1--;
+      if (angle1 < 0)
+      {
+        angle1 = 0;
+      }
+    }
+    else
+    {
+      angle1++;
+      if (angle1 > 180)
+      {
+        angle1 = 180;
+      }
+    }
+    Front_Left1.write(angle1);
   }
 }
