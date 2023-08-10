@@ -68,14 +68,16 @@ double angle3 = 59;
 class Leg
 {
 public:
-  unsigned long prevTime = 0;
-  double angle1 = 45;
-  double angle2 = 146;
-  double angle3 = 59;
+  double prev1 = 45;
+  double prev2 = 146;
+  double prev3 = 59;
+  double J1;
+  double J2;
+  double J3;
   Leg()
   {
   }
-  void calculate(double X, double Y, double Z)
+  void calculateIK(double X, double Y, double Z)
   {
     if (X > 0)
     {
@@ -115,46 +117,39 @@ public:
     }
   }
 
-  void move()
+  void update1()
   {
-    unsigned long current = millis();
-    if (current - prevTime >= __angleTimeGap)
+    if (prev1 < int(J1))
     {
-      prevTime = current;
-      if (J3 < angle3)
-      {
-        this->angle3--;
-      }
-      else
-      {
-        this->angle3++;
-      }
-      if (J2 < angle2)
-      {
-        this->angle2--;
-      }
-      else
-      {
-        this->angle2++;
-      }
-      if (J1 < angle1)
-      {
-        this->angle1--;
-      }
-      else
-      {
-        this->angle1++;
-      }
-      Front_Left3.write(180 - angle3);
-      Front_Left2.write(angle2);
-      Front_Left1.write(angle1);
+      prev1++;
     }
+    else if (prev1 > int(J1))
+    {
+      prev1--;
+    }
+    if (prev2 < int(J2))
+    {
+      prev2++;
+    }
+    else if (prev2 > int(J2))
+    {
+      prev2--;
+    }
+    if (prev3 < int(J3))
+    {
+      prev3++;
+    }
+    else if (prev3 > int(J3))
+    {
+      prev3--;
+    }
+    Front_Left3.write(180 - prev3);
+    Front_Left2.write(prev2);
+    Front_Left1.write(prev1);
   }
 
 private:
-  double J1;
-  double J2;
-  double J3;
+  
 };
 
 Leg L1;
@@ -200,24 +195,6 @@ void Move(int leg, double X, double Y, double Z)
     J2 = (Alpha_1 + Alpha_2);
     J3 = acos(((J2L * J2L) + (J3L * J3L) - (R * R)) / (2 * J2L * J3L)) * (180 / PI);
   }
-  // Serial.println("J1");
-  // Serial.println(J1);
-  // Serial.println("D");
-  // Serial.println(D);
-  // Serial.println("d");
-  // Serial.println(d);
-  // Serial.println("Z_offset");
-  // Serial.println(Z_offset);
-  // Serial.println("R");
-  // Serial.println(R);
-  // Serial.println("Alpha_1");
-  // Serial.println(Alpha_1);
-  // Serial.println("Alpha_2");
-  // Serial.println(Alpha_2);
-  // Serial.println("J2");
-  // Serial.println(J2);
-  // Serial.println("J3");
-  // Serial.println(J3);
   switch (leg)
   {
   case 1:
@@ -324,42 +301,6 @@ void calculateIK(double X, double Y, double Z)
 double prev1 = 45;
 double prev2 = 146;
 double prev3 = 59;
-
-void move(double J1, double J2, double J3, double &prevangle1, double &prevangle2, double &prevangle3)
-{
-  unsigned long current = millis();
-  if (current - prevtime >= 10)
-  {
-    prevtime = current;
-    if (J3 < prevangle3)
-    {
-      prevangle3--;
-    }
-    else
-    {
-      prevangle3++;
-    }
-    if (J2 < prevangle2)
-    {
-      prevangle2--;
-    }
-    else
-    {
-      prevangle2++;
-    }
-    if (J1 < prevangle1)
-    {
-      prevangle1--;
-    }
-    else
-    {
-      prevangle1++;
-    }
-    Front_Left3.write(180 - prevangle3);
-    Front_Left2.write(prevangle2);
-    Front_Left1.write(prevangle1);
-  }
-}
 
 void stand()
 {
@@ -606,29 +547,97 @@ void TurnRight()
   Move(2, 0, 10, 8);
 }
 
+void update1()
+{
+  if (prev1 < int(J1))
+  {
+    prev1++;
+  }
+  else if (prev1 > int(J1))
+  {
+    prev1--;
+  }
+  if (prev2 < int(J2))
+  {
+    prev2++;
+  }
+  else if (prev2 > int(J2))
+  {
+    prev2--;
+  }
+  if (prev3 < int(J3))
+  {
+    prev3++;
+  }
+  else if (prev3 > int(J3))
+  {
+    prev3--;
+  }
+  Front_Left3.write(180 - prev3);
+  Front_Left2.write(prev2);
+  Front_Left1.write(prev1);
+}
+
+void update2()
+{
+}
+
 const unsigned long event1 = 1000;
 const unsigned long event2 = 5000;
 int i = 0;
 int j = 0;
+bool step1 = false;
+bool step2 = false;
+bool step3 = false;
+bool step4 = false;
 void loop()
 {
   unsigned long curr = millis();
- 
-  if(curr - prevtime > 100){
-    if(i != 5){
-      i = i+1;
-      Move(1, 12, 12, 8+i);
-    }else if(i==5){
-      i = 0;
-      if(j != 5){
-        j++;
-        Move(1, 12, 12, 13-i);
-      }else if(j == 5){
-        j = 0;
+  if (curr - prevtime > 50)
+  {
+    if (step1 != true)
+    {
+      calculateIK(10, 10, 8);
+      update1();
+      if (prev1 == int(J1) && prev2 == int(J2) && prev3 == int(J3))
+      {
+        step1 = true;
       }
+    }
+    if (step1 == true && step2 == false)
+    {
+      calculateIK(12, 12, 13);
+      update1();
+      if (prev1 == int(J1) && prev2 == int(J2) && prev3 == int(J3))
+      {
+        step2 = true;
+      }
+    }
+    if (step1 == true && step2 == true && step3 == false)
+    {
+      calculateIK(-4, sqrt(272), 13);
+      update1();
+      if (prev1 == int(J1) && prev2 == int(J2) && prev3 == int(J3))
+      {
+        step3 = true;
+      }
+    }
+    if (step1 == true && step2 == true && step3 == true && step4 == false)
+    {
+      calculateIK(-4, sqrt(184), 8);
+      update1();
+      if (prev1 == int(J1) && prev2 == int(J2) && prev3 == int(J3))
+      {
+        step4 = true;
+      }
+    }
+    if (step1 == true && step2 == true && step3 == true && step4 == true)
+    {
+      step1 = false;
+      step2 = false;
+      step3 = false;
+      step4 = false;
     }
     prevtime = curr;
   }
-
-
 }
