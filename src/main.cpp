@@ -48,9 +48,8 @@ void setup()
   delay(2000);
 }
 
-
-
+int x = 0;
 void loop()
 {
-  Forward();
+  TurnRight();
 }
