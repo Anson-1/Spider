@@ -33,7 +33,8 @@ void stand()
     L4.update4();
 }
 
-void Forward()
+int i = 0;
+void Forward(int x)
 {
     unsigned long curr = millis();
     if (curr - prevtime > 5)
@@ -159,10 +160,11 @@ void Forward()
                 L3.prev1 == int(L3.J1) && L3.prev2 == int(L3.J2) && L3.prev3 == int(L3.J3) && L4.prev1 == int(L4.J1) && L4.prev2 == int(L4.J2) && L4.prev3 == int(L4.J3))
             {
                 step12 = true;
+                i++;
             }
         }
 
-        if (step1 == true && step2 == true && step3 == true && step4 == true && step5 == true && step6 == true && step7 == true && step8 == true && step9 == true && step10 == true && step11 == true && step12 == true)
+        if (step1 == true && step2 == true && step3 == true && step4 == true && step5 == true && step6 == true && step7 == true && step8 == true && step9 == true && step10 == true && step11 == true && step12 == true && i < x)
         {
             step1 = false;
             step2 = false;
@@ -181,7 +183,7 @@ void Forward()
     }
 }
 
-void Backward()
+void Backward(int x)
 {
     unsigned long curr = millis();
     if (curr - prevtime > 10)
@@ -307,10 +309,11 @@ void Backward()
                 L3.prev1 == int(L3.J1) && L3.prev2 == int(L3.J2) && L3.prev3 == int(L3.J3) && L4.prev1 == int(L4.J1) && L4.prev2 == int(L4.J2) && L4.prev3 == int(L4.J3))
             {
                 step12 = true;
+                i++;
             }
         }
 
-        if (step1 == true && step2 == true && step3 == true && step4 == true && step5 == true && step6 == true && step7 == true && step8 == true && step9 == true && step10 == true && step11 == true && step12 == true)
+        if (step1 == true && step2 == true && step3 == true && step4 == true && step5 == true && step6 == true && step7 == true && step8 == true && step9 == true && step10 == true && step11 == true && step12 == true && i < x)
         {
             step1 = false;
             step2 = false;

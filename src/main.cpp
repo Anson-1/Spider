@@ -51,5 +51,5 @@ void setup()
 int x = 0;
 void loop()
 {
-  TurnRight();
+  Forward(2);
 }
