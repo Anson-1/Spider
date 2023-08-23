@@ -46,7 +46,7 @@ class Serial2Hardware {
   long baud_;
 };
 
-//#define __ROS_USE_SPP_HANDLE__
+#define __ROS_USE_SPP_HANDLE__
 #ifdef __ROS_USE_SPP_HANDLE__
 typedef NodeHandle_<BluetootSPP, 5, 5, 512, 512> MyNodeHandle;
 #else
